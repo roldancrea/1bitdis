@@ -6,8 +6,8 @@
  *   text:    lista de párrafos
  *   choices: opciones. Cada opción puede tener:
  *              to:  escena destino
- *              set: banderas que se activan, ej. { farol: true }
- *              if:  condición, ej. "farol" o "!farol"
+ *              set: banderas que se activan, ej. { candil: true }
+ *              if:  condición, ej. "candil" o "!candil"
  *   ending:  si existe, la escena es un final (título del final)
  */
 const STORY = {
@@ -19,18 +19,19 @@ const STORY = {
       text: [
         "Lía despierta sobre musgo húmedo. No recuerda haberse dormido.",
         "La niebla lo cubre todo. A lo lejos suena una campana, lenta, como si contara algo.",
-        "A su lado, entre las raíces, hay un farol apagado.",
+        "A su lado, sobre una roca cubierta de musgo, hay un candil apagado. Una rana lo vigila sin parpadear.",
       ],
       choices: [
-        { text: "Coger el farol", to: "farol", set: { farol: true } },
+        { text: "Coger el candil", to: "candil", set: { candil: true } },
         { text: "Seguir el sonido de la campana", to: "campana" },
       ],
     },
 
-    farol: {
-      art: "claro", fog: 0.4,
+    candil: {
+      art: "candil", fog: 0.3,
       text: [
-        "El metal está frío. En cuanto lo sujeta, una llama verde se enciende sola.",
+        "Lía se acerca a la roca. La rana no se mueve; solo la mira.",
+        "El metal está frío. En cuanto lo roza, una llama verde se enciende sola. La rana croa una vez, como si diera permiso.",
         "La niebla retrocede un paso, como un animal que respeta el fuego.",
         "Aparece un sendero. Y, entre los árboles, pequeñas luces que flotan.",
       ],
@@ -61,7 +62,7 @@ const STORY = {
       ],
       choices: [
         { text: "Ir con ellas", to: "lago" },
-        { text: "Apagar el farol y esconderse", to: "oscuridad", if: "farol", set: { farol: false } },
+        { text: "Apagar el candil y esconderse", to: "oscuridad", if: "candil", set: { candil: false } },
       ],
     },
 
@@ -123,7 +124,7 @@ const STORY = {
       ],
       choices: [
         { text: "Caminar a ciegas hacia ese sonido", to: "final_casa" },
-        { text: "Volver a encender el farol", to: "lago", set: { farol: true } },
+        { text: "Volver a encender el candil", to: "lago", set: { candil: true } },
       ],
     },
 
@@ -149,7 +150,7 @@ const STORY = {
         "Nadie responde cuando Lía pregunta si hay alguien.",
       ],
       choices: [
-        { text: "Dejar el farol en la ventana", to: "final_faro", if: "farol" },
+        { text: "Dejar el candil en la ventana", to: "final_faro", if: "candil" },
         { text: "Destapar el espejo", to: "final_reflejo" },
         { text: "Sentarse a esperar", to: "final_niebla" },
       ],
@@ -184,9 +185,9 @@ const STORY = {
     },
 
     final_faro: {
-      art: "cabana", fog: 0.25, ending: "LA LUZ EN LA VENTANA",
+      art: "ventana", fog: 0.2, ending: "LA LUZ EN LA VENTANA",
       text: [
-        "Coloca el farol junto al cristal. La llama crece, verde y tranquila.",
+        "Coloca el candil junto al cristal. La llama crece, verde y tranquila. Los mosquitos acuden a bailar a su alrededor.",
         "Lía comprende que no va a salir. Pero cualquiera que se pierda aquí verá esta luz.",
         "Y nadie más tendrá que esperar sola.",
       ],

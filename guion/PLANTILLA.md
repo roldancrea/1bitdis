@@ -14,9 +14,9 @@ Cada párrafo, separado por una línea en blanco.
 
 **Opciones:**
 - Texto del botón → nombre_de_la_escena_a_la_que_lleva
-- Otra opción → otra_escena  [consigue: farol]
-- Opción secreta → escena_secreta  [solo si: farol]
-- Opción si NO tiene algo → otra  [solo si no: farol]
+- Otra opción → otra_escena  [consigue: candil]
+- Opción secreta → escena_secreta  [solo si: candil]
+- Opción si NO tiene algo → otra  [solo si no: candil]
 
 ---
 
@@ -33,7 +33,7 @@ Texto del final.
 
 1. **Nombres de escena**: cortos, en minúscula, sin espacios ni tildes (`puente_roto`, `cabana_dentro`).
    Son las «direcciones» del juego: una opción lleva a una escena por su nombre exacto.
-2. **Objetos y recuerdos** (`farol`, `recuerdo`, `cinta`...): escríbelos siempre igual.
+2. **Objetos y recuerdos** (`candil`, `recuerdo`, `cinta`...): escríbelos siempre igual.
    - `[consigue: x]` → Lía lo obtiene al elegir esa opción.
    - `[pierde: x]` → lo pierde.
    - `[solo si: x]` / `[solo si no: x]` → la opción solo aparece si lo tiene / no lo tiene.

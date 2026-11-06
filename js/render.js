@@ -215,6 +215,115 @@ const Render = (() => {
     }
   };
 
+
+  // invierte un píxel: los mosquitos se ven tanto sobre verde como sobre morado
+  const inv = (x, y) => {
+    x |= 0; y |= 0;
+    if (x >= 0 && y >= 0 && x < W && y < H) art[y * W + x] ^= 1;
+  };
+
+  // halo de luz tramado: solo ilumina el fondo (lo morado)
+  const glow = (cx, cy, R, strength, t, box) => {
+    const flick = 0.92 + 0.08 * Math.sin(t * 9) * Math.sin(t * 4.3);
+    for (let y = Math.max(0, cy - R | 0); y < Math.min(H, cy + R); y++)
+      for (let x = Math.max(0, cx - R | 0); x < Math.min(W, cx + R); x++) {
+        if (box && (x < box[0] || y < box[1] || x > box[2] || y > box[3])) continue;
+        const d = Math.hypot(x - cx, (y - cy) * 1.1) / R;
+        if (d < 1 && art[y * W + x] === 0 && strength * flick * Math.pow(1 - d, 1.6) > bayer(x, y))
+          art[y * W + x] = 1;
+      }
+  };
+
+  // candil grande (primer plano). (cx, base) = centro de la base
+  const bigCandil = (cx, base, lit, t) => {
+    rect(cx - 8, base - 26, 17, 27, 0);                 // contorno morado para separarlo del fondo
+    disc(cx, base - 22, 3); disc(cx, base - 22, 1, 0);  // asa
+    rect(cx - 1, base - 19, 3, 3);                      // cuello
+    for (let j = 0; j < 4; j++) rect(cx - 1 - j, base - 16 + j, 3 + 2 * j, 1); // sombrerete
+    rect(cx - 6, base - 12, 13, 1);                     // aro superior
+    rect(cx - 6, base - 12, 1, 10); rect(cx + 6, base - 12, 1, 10); // varillas del cristal
+    rect(cx - 6, base - 3, 13, 3);                      // base
+    line(cx - 4, base - 2, cx + 4, base - 2, 0);
+    px(cx - 6, base - 1, 0); px(cx + 6, base - 1, 0);
+    if (lit) { // llama que tiembla
+      const h = 6 + Math.round(Math.sin(t * 11) + Math.sin(t * 6.7));
+      const sway = Math.round(Math.sin(t * 5) * 0.8);
+      for (let j = 0; j < h; j++) {
+        const k = j / h; // 0 = punta
+        const hw = k < 0.3 ? 0 : k < 0.7 ? 1 : 2;
+        rect(cx - hw + (k < 0.5 ? sway : 0), base - 4 - h + j, hw * 2 + 1, 1);
+      }
+      px(cx, base - 5, 0); // mecha dentro de la llama
+    } else {
+      rect(cx, base - 6, 1, 2); // mecha apagada
+    }
+  };
+
+  // roca de cima plana. (cx, top) = centro de la cima
+  const rock = (cx, top, w, h, seed) => {
+    const rx = w / 2, ry = h * 0.62, cy = top + h * 0.38;
+    const r = rng(seed);
+    for (let y = top; y < top + h; y++)
+      for (let x = cx - rx; x <= cx + rx; x++) {
+        const dx = (x - cx) / rx, dy = (y - cy) / ry;
+        const edge = 1 + Math.sin(x * 0.9 + seed) * 0.04 + Math.sin(y * 1.3) * 0.03;
+        if (dx * dx + dy * dy > edge) continue;
+        const shade = dx * 0.55 + dy * 0.7; // sombra abajo a la derecha
+        px(x, y, (shade - 0.15) * 1.4 > bayer(x | 0, y) ? 0 : 1);
+      }
+    for (let k = 0; k < 3; k++) { // grietas
+      let x = cx - rx * 0.6 + r() * rx * 1.2, y = top + 3 + r() * h * 0.3;
+      for (let s = 0; s < 6; s++) {
+        const nx = x + (r() * 4 - 2), ny = y + 1 + r() * 2;
+        line(x, y, nx, ny, 0); x = nx; y = ny;
+      }
+    }
+    for (let x = cx - rx * 0.8; x < cx + rx * 0.8; x += 2) // musgo
+      if (r() > 0.4) { px(x, top - 1); if (r() > 0.6) px(x + 1, top - 2); }
+  };
+
+  // rana de frente, con parpadeo y buche que se infla al croar
+  const FROG = [
+    "..ooo.....ooo..",
+    ".o###o...o###o.",
+    ".o#o#ooooo#o#o.",
+    "o#############o",
+    "o#ooooooooooo#o",
+    "o#############o",
+    "o##o#######o##o",
+    "o#oo#######oo#o",
+    "o#o.ooooooo.o#o",
+    "ooo.........ooo",
+  ];
+  const FROG_BLINK = FROG.map((row, j) => j === 2 ? ".o###ooooo###o." : row);
+  const frog = (x, y, t, s = 2) => {
+    const blink = (t % 3.7) < 0.18;
+    (blink ? FROG_BLINK : FROG).forEach((row, j) => [...row].forEach((c, i) => {
+      if (c === "#") rect(x + i * s, y + j * s, s, s, 1);
+      else if (c === "o") rect(x + i * s, y + j * s, s, s, 0);
+    }));
+    if ((t % 4.6) > 3.9) { // croac: el buche se infla
+      const k = Math.sin(((t % 4.6) - 3.9) / 0.7 * Math.PI);
+      const r = Math.round((1 + k * 2) * s / 1.5);
+      const cx = x + 7.5 * s, cy = y + 6.5 * s;
+      disc(cx, cy, r + 1, 0); disc(cx, cy, r, 1);
+    }
+  };
+
+  // nube de mosquitos zumbando alrededor de una luz
+  const mosquitoes = (t, cx, cy, n, spread) => {
+    for (let i = 0; i < n; i++) {
+      const a = t * (1.7 + (i % 4) * 0.45) + i * 1.9;
+      const r = spread * (0.45 + ((i * 37) % 11) / 20);
+      const x = cx + Math.cos(a) * r + Math.sin(t * 13 + i) * 1.5;
+      const y = cy + Math.sin(a * 1.31 + i) * r * 0.7 + Math.cos(t * 11 + i * 2) * 1.5;
+      const up = ((t * 24) | 0) % 2 === i % 2; // aleteo
+      rect(x - 2, y - 2, 5, 4, 0);
+      px(x, y); px(x + 1, y);
+      if (up) { px(x - 1, y - 1); px(x + 2, y - 1); } else { px(x - 1, y + 1); px(x + 2, y + 1); }
+    }
+  };
+
   // ---------- ilustraciones ----------
   const ARTS = {
     claro(t, f) {
@@ -222,7 +331,8 @@ const Render = (() => {
       forest(7, 14, 72);
       groundLine(72, 3);
       girl(60, 57);
-      lantern(52, 66, f.farol, t);
+      rock(53, 69, 16, 6, 9);
+      lantern(52, 63, f.candil, t);
     },
     bosque(t) {
       forest(21, 26, 78);
@@ -234,7 +344,7 @@ const Render = (() => {
       groundLine(76, 4);
       wisps(t, 64, 40, 7, 34);
       girl(60, 61);
-      lantern(70, 70, f.farol, t);
+      lantern(70, 70, f.candil, t);
     },
     puente(t) {
       // Perspectiva frontal: el puente se aleja hacia el punto de fuga (64, HZ)
@@ -318,10 +428,43 @@ const Render = (() => {
       disc(108, 12, 5);
       [[6, 82, 40], [20, 80, 30], [112, 82, 44], [124, 80, 30]].forEach(([x, b, h]) => pine(x, b, h, false));
       groundLine(84, 2);
-      cabin(64, 84, 2.1, f.farol, t);
+      cabin(64, 84, 2.1, f.candil, t);
+      if (f.candil) mosquitoes(t, 48, 60, 7, 16);
       // senda de piedras hasta la puerta
       [[74, 88], [71, 91], [76, 94]].forEach(([x, y]) => { rect(x, y, 4, 2); px(x + 1, y, 0); });
       wisps(t, 64, 26, 2, 54);
+    },
+    candil(t, f) {
+      forest(44, 6, 74);
+      groundLine(80, 6);
+      if (f.candil) glow(50, 47, 36, 0.5, t);
+      rock(62, 60, 72, 28, 3);
+      bigCandil(48, 60, f.candil, t);
+      frog(66, 40, t);
+      mosquitoes(t, 48, 40, 3, 18);
+    },
+    ventana(t, f) {
+      // pared de troncos
+      rect(0, 0, W, H);
+      const r = rng(8);
+      for (let y = 5; y < H; y += 6) {
+        line(0, y, W - 1, y, 0);
+        for (let x = 0; x < W; x += 1) if (r() > 0.93) px(x, y + 2 + (r() * 2 | 0), 0); // vetas
+      }
+      rect(0, 0, W, 4, 0); for (let x = 0; x < W; x += 4) rect(x, 3, 2, 2); // alero
+      // ventana
+      rect(25, 11, 79, 68, 0);
+      rect(26, 12, 77, 66);
+      rect(30, 16, 69, 58, 0);                    // cristal
+      glow(46, 62, 40, 0.6, t, [30, 16, 98, 73]);
+      dither(68, 16, 30, 27, 0.18);               // cortina rota al fondo
+      for (let y = 16; y < 43; y += 3) px(70 + (y % 7), y, 0);
+      line(34, 32, 42, 24, 0); line(34, 36, 46, 24, 0); // reflejos
+      rect(63, 16, 3, 58); rect(30, 43, 69, 3);   // marco en cruz
+      bigCandil(46, 73, true, t);
+      rect(20, 78, 89, 4); line(20, 82, 108, 82, 0); // alféizar
+      px(30, 79, 0); px(72, 80, 0);
+      mosquitoes(t, 48, 52, 11, 30);
     },
     oscuro(t) {
       // casi nada: solo ojos que buscan y un brillo lejano
@@ -359,7 +502,7 @@ const Render = (() => {
               + 0.6 * Math.sin((fx + fy) * 0.045 - t * 0.6)
               + 0.4 * Math.sin(fx * 0.17 - fy * 0.05 + t * 0.9);
         let d = level * (0.12 + 0.45 * low * low + 0.16 * n);
-        if (clear) { // el farol aparta la niebla
+        if (clear) { // el candil aparta la niebla
           const dist = Math.hypot(x - clear.x, (y - clear.y) * 1.3);
           d *= Math.min(1, dist / clear.r);
         }
@@ -378,6 +521,8 @@ const Render = (() => {
     puente: { from: { x: 64, y: 70, z: 1.05 }, to: { x: 64, y: 40, z: 1.7 }, dur: 11 }, // avanzar hacia la cabaña
     lago:   { from: { x: 64, y: 24, z: 1.5 }, to: { x: 60, y: 58, z: 1.12 }, dur: 8 },  // de la luna al agua
     cabana: { from: { x: 64, y: 52, z: 1.02 }, to: { x: 50, y: 58, z: 1.55 }, dur: 10 },// hacia la ventana
+    candil:  { from: { x: 48, y: 46, z: 2.0 }, to: { x: 62, y: 54, z: 1.1 }, dur: 8 },   // de la llama a la roca y la rana
+    ventana: { from: { x: 64, y: 48, z: 1.0 }, to: { x: 52, y: 54, z: 1.3 }, dur: 12 },  // acercarse al candil
     oscuro: { from: { x: 64, y: 48, z: 1.3 }, to: { x: 64, y: 56, z: 1.1 }, dur: 9 },
     luz:    { from: { x: 64, y: 48, z: 2.0 }, to: { x: 64, y: 48, z: 1.0 }, dur: 7 },   // zoom out, liberación
     niebla: { from: { x: 64, y: 54, z: 1.0 }, to: { x: 64, y: 56, z: 1.7 }, dur: 12 },  // la niebla la engulle
@@ -408,7 +553,7 @@ const Render = (() => {
   const prev = new Uint8Array(W * H);
   const TRANSITION = 0.7; // segundos del fundido tramado entre escenas
   let current = null, flags = {}, start = performance.now(), last = 0, sceneStart = 0;
-  const LANTERN_POS = { claro: { x: 54, y: 68 }, fuegos: { x: 72, y: 72 }, cabana: { x: 48, y: 60 } };
+  const LANTERN_POS = { claro: { x: 54, y: 66 }, fuegos: { x: 72, y: 72 }, cabana: { x: 48, y: 60 }, candil: { x: 48, y: 50 }, ventana: { x: 46, y: 62 } };
 
   function draw(now) {
     requestAnimationFrame(draw);
@@ -433,7 +578,7 @@ const Render = (() => {
     }
 
     // 3. niebla por encima, con parallax
-    const lp = flags.farol && LANTERN_POS[current.art];
+    const lp = flags.candil && LANTERN_POS[current.art];
     const clear = lp ? { x: (lp.x - left) * cam.z, y: (lp.y - top) * cam.z, r: 26 * cam.z } : null;
     fog(screen, t, current.fog ?? 0.5, clear, left * 0.5, top * 0.5);
 

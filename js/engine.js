@@ -41,6 +41,12 @@
   }
 
   function startGame(saved) {
+    // partidas guardadas con versiones anteriores del juego
+    if (saved && saved.flags && "farol" in saved.flags) {
+      saved.flags.candil = saved.flags.farol; delete saved.flags.farol;
+    }
+    if (saved && saved.scene === "farol") saved.scene = "candil";
+    if (saved && !STORY.scenes[saved.scene]) saved = null;
     state = saved || { scene: STORY.start, flags: {} };
     titleEl.hidden = true;
     gameEl.hidden = false;
