@@ -66,7 +66,7 @@ const STORY = {
     },
 
     sendero: {
-      art: "puente", fog: 0.45,
+      art: "puente", fog: 0.35,
       text: [
         "El sendero termina en un puente de cuerdas sobre un barranco sin fondo.",
         "Al otro lado, una cabaña con una ventana encendida.",
