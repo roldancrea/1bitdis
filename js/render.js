@@ -347,40 +347,108 @@ const Render = (() => {
   };
 
   // ---------- niebla ----------
-  function fog(t, level, clear) {
+  // Se calcula sobre la pantalla (no sobre el dibujo). ox/oy desplazan la niebla
+  // más despacio que la escena: eso da sensación de profundidad (parallax).
+  function fog(buf, t, level, clear, ox, oy) {
     for (let y = 0; y < H; y++) {
       const low = y / H; // más niebla abajo
+      const fy = y + oy;
       for (let x = 0; x < W; x++) {
-        let n = Math.sin(x * 0.06 + t * 0.35) * Math.cos(y * 0.09 - t * 0.25)
-              + 0.6 * Math.sin((x + y) * 0.045 - t * 0.6)
-              + 0.4 * Math.sin(x * 0.17 - y * 0.05 + t * 0.9);
+        const fx = x + ox;
+        let n = Math.sin(fx * 0.06 + t * 0.35) * Math.cos(fy * 0.09 - t * 0.25)
+              + 0.6 * Math.sin((fx + fy) * 0.045 - t * 0.6)
+              + 0.4 * Math.sin(fx * 0.17 - fy * 0.05 + t * 0.9);
         let d = level * (0.12 + 0.45 * low * low + 0.16 * n);
         if (clear) { // el farol aparta la niebla
           const dist = Math.hypot(x - clear.x, (y - clear.y) * 1.3);
           d *= Math.min(1, dist / clear.r);
         }
-        if (d > bayer(x, y)) art[y * W + x] = 1;
+        if (d > bayer(x, y)) buf[y * W + x] = 1;
       }
     }
   }
 
+  // ---------- cámara ----------
+  // Cada ilustración tiene un plano: la cámara va de "from" a "to" (centro x, y y zoom)
+  // durante "dur" segundos. Después respira suavemente. Zoom 1 = escena completa.
+  const SHOTS = {
+    claro:  { from: { x: 60, y: 64, z: 1.7 }, to: { x: 64, y: 50, z: 1.08 }, dur: 7 },  // de Lía al bosque
+    bosque: { from: { x: 64, y: 40, z: 1.08 }, to: { x: 64, y: 66, z: 1.45 }, dur: 9 }, // el bosque se cierra
+    fuegos: { from: { x: 40, y: 50, z: 1.4 }, to: { x: 76, y: 52, z: 1.2 }, dur: 8 },   // traveling lateral
+    puente: { from: { x: 64, y: 70, z: 1.05 }, to: { x: 64, y: 40, z: 1.7 }, dur: 11 }, // avanzar hacia la cabaña
+    lago:   { from: { x: 64, y: 24, z: 1.5 }, to: { x: 60, y: 58, z: 1.12 }, dur: 8 },  // de la luna al agua
+    cabana: { from: { x: 64, y: 52, z: 1.02 }, to: { x: 50, y: 58, z: 1.55 }, dur: 10 },// hacia la ventana
+    oscuro: { from: { x: 64, y: 48, z: 1.3 }, to: { x: 64, y: 56, z: 1.1 }, dur: 9 },
+    luz:    { from: { x: 64, y: 48, z: 2.0 }, to: { x: 64, y: 48, z: 1.0 }, dur: 7 },   // zoom out, liberación
+    niebla: { from: { x: 64, y: 54, z: 1.0 }, to: { x: 64, y: 56, z: 1.7 }, dur: 12 },  // la niebla la engulle
+  };
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ease = k => 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, k)));
+
+  function camera(art, st, t) {
+    const shot = SHOTS[art] || SHOTS.niebla;
+    if (reduceMotion) return { x: 64, y: 48, z: 1 };
+    const k = ease(st / shot.dur);
+    let x = shot.from.x + (shot.to.x - shot.from.x) * k;
+    let y = shot.from.y + (shot.to.y - shot.from.y) * k;
+    let z = shot.from.z + (shot.to.z - shot.from.z) * k;
+    // respiración: un leve vaivén, como cámara en mano
+    x += Math.sin(t * 0.31) * 1.6;
+    y += Math.cos(t * 0.23) * 1.1;
+    z *= 1 + 0.025 * Math.sin(t * 0.4);
+    z = Math.max(1, z);
+    const hw = W / z / 2, hh = H / z / 2; // no salirse del dibujo
+    x = Math.min(W - hw, Math.max(hw, x));
+    y = Math.min(H - hh, Math.max(hh, y));
+    return { x, y, z };
+  }
+
   // ---------- bucle ----------
-  let current = null, flags = {}, start = performance.now(), last = 0;
+  const screen = new Uint8Array(W * H);
+  const prev = new Uint8Array(W * H);
+  const TRANSITION = 0.7; // segundos del fundido tramado entre escenas
+  let current = null, flags = {}, start = performance.now(), last = 0, sceneStart = 0;
   const LANTERN_POS = { claro: { x: 54, y: 68 }, fuegos: { x: 72, y: 72 }, cabana: { x: 48, y: 60 } };
 
   function draw(now) {
     requestAnimationFrame(draw);
-    if (now - last < 50) return; // ~20 fps: suficiente y ahorra batería
+    if (now - last < 33) return; // ~30 fps
     last = now;
     if (!current) return;
     const t = (now - start) / 1000;
+    const st = t - sceneStart;
+
+    // 1. dibujar la escena completa
     art.fill(0);
     (ARTS[current.art] || ARTS.niebla)(t, flags);
+
+    // 2. encuadrar con la cámara (vecino más cercano: se mantiene 1-bit)
+    const cam = camera(current.art, st, t);
+    const left = cam.x - W / cam.z / 2, top = cam.y - H / cam.z / 2;
+    for (let y = 0; y < H; y++) {
+      const sy = Math.min(H - 1, (top + (y + 0.5) / cam.z) | 0) * W;
+      for (let x = 0; x < W; x++) {
+        screen[y * W + x] = art[sy + Math.min(W - 1, (left + (x + 0.5) / cam.z) | 0)];
+      }
+    }
+
+    // 3. niebla por encima, con parallax
     const lp = flags.farol && LANTERN_POS[current.art];
-    fog(t, current.fog ?? 0.5, lp ? { ...lp, r: 26 } : null);
+    const clear = lp ? { x: (lp.x - left) * cam.z, y: (lp.y - top) * cam.z, r: 26 * cam.z } : null;
+    fog(screen, t, current.fog ?? 0.5, clear, left * 0.5, top * 0.5);
+
+    // 4. fundido tramado desde la escena anterior
+    if (st < TRANSITION) {
+      const k = st / TRANSITION;
+      for (let i = 0; i < screen.length; i++)
+        if (bayer(i % W, (i / W) | 0) > k) screen[i] = prev[i];
+    } else {
+      prev.set(screen);
+    }
+
     const d = img.data;
-    for (let i = 0; i < art.length; i++) {
-      const c = art[i] ? FG : BG;
+    for (let i = 0; i < screen.length; i++) {
+      const c = screen[i] ? FG : BG;
       d[i * 4] = c[0]; d[i * 4 + 1] = c[1]; d[i * 4 + 2] = c[2]; d[i * 4 + 3] = 255;
     }
     ctx.putImageData(img, 0, 0);
@@ -388,6 +456,10 @@ const Render = (() => {
   requestAnimationFrame(draw);
 
   return {
-    show(scene, f) { current = scene; flags = f; },
+    show(scene, f) {
+      // si cambia la ilustración, la cámara empieza su plano y se hace el fundido
+      if (!current || current.art !== scene.art) sceneStart = (performance.now() - start) / 1000;
+      current = scene; flags = f;
+    },
   };
 })();
