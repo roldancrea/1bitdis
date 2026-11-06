@@ -1,0 +1,14 @@
+{
+  "name": "Niebla",
+  "short_name": "Niebla",
+  "description": "Juego narrativo 1-bit: una niña perdida en un bosque fantasmagórico.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1c0a2b",
+  "theme_color": "#1c0a2b",
+  "lang": "es",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

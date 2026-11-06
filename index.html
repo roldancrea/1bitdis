@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#1c0a2b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Niebla</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <div class="frame">
+      <canvas id="scene" width="128" height="96" aria-hidden="true"></canvas>
+    </div>
+
+    <!-- Pantalla de título -->
+    <section id="title" class="panel">
+      <h1>NIEBLA</h1>
+      <p class="subtitle">Una niña. Un bosque que no recuerda.</p>
+      <div class="choices">
+        <button id="btn-new" class="choice">Comenzar</button>
+        <button id="btn-continue" class="choice" hidden>Continuar</button>
+      </div>
+      <p id="endings-count" class="small"></p>
+    </section>
+
+    <!-- Pantalla de juego -->
+    <section id="game" class="panel" hidden>
+      <div id="text" class="text" aria-live="polite"></div>
+      <div id="choices" class="choices"></div>
+    </section>
+  </main>
+
+  <script src="js/story.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/engine.js"></script>
+</body>
+</html>

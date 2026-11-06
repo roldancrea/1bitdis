@@ -1,0 +1,113 @@
+/* Paleta 1-bit: solo dos colores */
+:root {
+  --bg: #1c0a2b;   /* morado noche */
+  --fg: #8cff6a;   /* verde fantasma */
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "VT323", ui-monospace, monospace;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+#app {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  gap: 14px;
+}
+
+.frame {
+  border: 2px solid var(--fg);
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+#scene {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.panel[hidden] { display: none; }
+
+h1 {
+  margin: 8px 0 0;
+  font-size: 56px;
+  font-weight: normal;
+  letter-spacing: 12px;
+  text-align: center;
+}
+.subtitle { text-align: center; font-size: 22px; margin: 0; }
+.small { text-align: center; font-size: 18px; opacity: 1; margin: 0; }
+
+.text {
+  font-size: 23px;
+  line-height: 1.15;
+  min-height: 6em;
+  cursor: pointer;
+}
+.text p { margin: 0 0 0.6em; }
+.text .ending-title {
+  display: block;
+  text-align: center;
+  letter-spacing: 4px;
+  margin-top: 0.4em;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.choice {
+  font: inherit;
+  font-size: 22px;
+  text-align: left;
+  color: var(--fg);
+  background: var(--bg);
+  border: 2px solid var(--fg);
+  padding: 10px 12px;
+  cursor: pointer;
+  /* aparición escalonada */
+  animation: appear 0.3s steps(3) both;
+}
+.choice::before { content: "> "; }
+.choice:active,
+.choice:focus-visible {
+  outline: none;
+  background: var(--fg);
+  color: var(--bg);
+}
+@media (hover: hover) {
+  .choice:hover { background: var(--fg); color: var(--bg); }
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.cursor { animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
