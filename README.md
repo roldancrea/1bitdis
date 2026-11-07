@@ -1,5 +1,10 @@
 # NIEBLA
 
+Hay dos versiones:
+
+- **1-bit** (raíz del proyecto): aventura de texto con ilustraciones de dos colores.
+- **PS1** (`ps1/`): point & click en 3D low-poly al estilo PlayStation. Es una demo con tres lugares (claro, puente y cabaña) y un final.
+
 Juego narrativo de decisiones para móvil, con estética 1-bit (verde y morado).
 Lía despierta perdida en un bosque fantasmagórico cubierto de niebla.
 
@@ -39,3 +44,14 @@ mi_escena: {
 ```
 
 Para un final, quita `choices` y añade `ending: "NOMBRE DEL FINAL"`.
+
+## Versión PS1 (`ps1/`)
+
+| Archivo | Qué hace |
+|---|---|
+| `ps1/js/ps1.js` | Efecto PS1: 320×240, vértices que tiemblan, texturas deformadas, color con tramado, niebla. Texturas generadas. |
+| `ps1/js/models.js` | Modelos low-poly: Lía, rana, candil, roca, pinos, cabaña, puente, niebla, mosquitos. |
+| `ps1/js/game.js` | Lugares, objetos con los que interactuar, diálogos y cámara. |
+| `ps1/lib/three.min.js` | Three.js r128 (licencia MIT, ver `THREE-LICENSE`). |
+
+Se juega tocando el suelo para caminar y tocando los objetos para ver las acciones.
