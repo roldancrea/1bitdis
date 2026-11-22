@@ -4,7 +4,9 @@
  * Guarda el progreso en localStorage.
  */
 (() => {
-  const Music = Chiptune; // música 8-bit para esta versión
+  // Música 8-bit. Si no ha cargado (p. ej. una caché antigua), el juego funciona igual, sin música.
+  const NO_MUSIC = { start() {}, setMood() {}, toggle() {}, bell() {}, croak() {} };
+  const Music = typeof Chiptune !== "undefined" ? Chiptune : NO_MUSIC;
   const SAVE_KEY = "niebla.save";
   const ENDINGS_KEY = "niebla.endings";
   const TYPE_SPEED = 22; // ms por letra
@@ -139,7 +141,7 @@
 
   $("btn-new").addEventListener("click", () => { Music.start(); store.del(SAVE_KEY); startGame(null); });
   $("btn-continue").addEventListener("click", () => { Music.start(); startGame(store.get(SAVE_KEY, null)); });
-  $("sound").addEventListener("click", () => Music.toggle());
+  if ($("sound")) $("sound").addEventListener("click", () => Music.toggle());
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
