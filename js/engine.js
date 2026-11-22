@@ -58,6 +58,9 @@
     if (!scene) { console.error("Escena no encontrada:", id); return; }
     state.scene = id;
     Render.show(scene, state.flags);
+    Ambient.setMood(scene.ending ? "final" : scene.art);
+    if (id === "inicio" || id === "campana") setTimeout(() => Ambient.bell(), 1800); // el texto habla de la campana
+    if (id === "candil") setTimeout(() => Ambient.croak(), 2500);
 
     if (scene.ending) {
       const found = store.get(ENDINGS_KEY, []);
@@ -133,8 +136,9 @@
   // Tocar el texto completa la frase de golpe
   textEl.addEventListener("click", () => typing && typing.finish());
 
-  $("btn-new").addEventListener("click", () => { store.del(SAVE_KEY); startGame(null); });
-  $("btn-continue").addEventListener("click", () => startGame(store.get(SAVE_KEY, null)));
+  $("btn-new").addEventListener("click", () => { Ambient.start(); store.del(SAVE_KEY); startGame(null); });
+  $("btn-continue").addEventListener("click", () => { Ambient.start(); startGame(store.get(SAVE_KEY, null)); });
+  $("sound").addEventListener("click", () => Ambient.toggle());
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("sw.js").catch(() => {});

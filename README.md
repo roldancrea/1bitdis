@@ -55,3 +55,10 @@ Para un final, quita `choices` y añade `ending: "NOMBRE DEL FINAL"`.
 | `ps1/lib/three.min.js` | Three.js r128 (licencia MIT, ver `THREE-LICENSE`). |
 
 Se juega tocando el suelo para caminar y tocando los objetos para ver las acciones.
+
+## Música
+
+`audio/ambient.js` genera la música en tiempo real con Web Audio (no hay archivos de audio):
+zumbido grave, viento, acordes en modo frigio, notas de caja de música, una campana lejana y
+el croar de la rana. Cada lugar tiene su ambiente (`MOODS`) y el cambio entre ellos es gradual.
+Lo usan las dos versiones; el botón ♪ silencia o activa la música.

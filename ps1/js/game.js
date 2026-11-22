@@ -215,7 +215,8 @@
             candil.setLit(true);
             removeHotspot(s, hsCandil);
             updateInventory();
-            frog.croak();
+            frog.croak(); Ambient.croak();
+            Ambient.setMood("candil");
             await talk("El metal está frío. En cuanto lo roza, una llama verde se enciende sola.",
                        "La rana croa una vez, como si diera permiso.",
                        "La niebla retrocede un paso, como un animal que respeta el fuego.");
@@ -231,7 +232,7 @@
         {
           label: "Hablar", run: async () => {
             if (!G.flags.candil) await talk("—Hola… ¿Sabes cómo salir de aquí?", "La rana mira el candil. Luego te mira a ti.");
-            else { frog.croak(); await say("La rana croa. Hacia la derecha, la niebla se abre un poco: hay un sendero."); }
+            else { frog.croak(); Ambient.croak(); await say("La rana croa. Hacia la derecha, la niebla se abre un poco: hay un sendero."); }
           },
         },
       ],
@@ -251,7 +252,7 @@
     hotspot(s, {
       name: "Campana lejana", pos: [-3.0, 1, -1.4], size: [1.8, 2, 2.4], at: [-4.2, -0.4], face: [-8, -0.5],
       actions: [
-        { label: "Escuchar", walk: false, run: () => say("Una campana, lenta, como si contara algo. Suena en todas partes a la vez.") },
+        { label: "Escuchar", walk: false, run: () => (Ambient.bell(), say("Una campana, lenta, como si contara algo. Suena en todas partes a la vez.")) },
         {
           label: "Ir", run: () => say(G.flags.candil
             ? "Por aquí el bosque se cierra. (Este camino llegará en la próxima versión.)"
@@ -376,6 +377,7 @@
             updateInventory();
             $("back").hidden = true;
             mosq.group.visible = true;
+            Ambient.setMood("final");
             await wait(400);
             await walkTo(V3(0.4, 0, 1.9)); // se aparta para mirar la luz
             face(-1.1, 0.1);
@@ -428,6 +430,7 @@
     await fade(true);
     G.room = ROOMS[id]();
     G.roomId = id;
+    Ambient.setMood(id === "claro" && G.flags.candil ? "candil" : id);
     G.scene = G.room.scene;
     const sp = spawn || G.room.spawn, fc = faceTo || G.room.spawnFace;
     girl.group.position.set(sp[0], 0, sp[1]);
@@ -445,6 +448,8 @@
       await G.room.onEnter();
     }
   }
+
+  $("sound").addEventListener("click", () => Ambient.toggle());
 
   $("back").addEventListener("click", async () => {
     if (G.busy || !G.room.back) return;
@@ -493,6 +498,8 @@
   // ---------- inicio ----------
   async function start() {
     G.started = true;
+    Ambient.start();
+    setTimeout(() => Ambient.bell(), 4000);
     $("title").classList.add("hide");
     G.busy = true;
     await talk("Lía despierta sobre musgo húmedo. No recuerda haberse dormido.",

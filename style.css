@@ -29,10 +29,28 @@ html, body {
 }
 
 .frame {
+  position: relative;
   border: 2px solid var(--fg);
   padding: 4px;
   flex-shrink: 0;
 }
+
+/* botón de música, en la esquina de la ilustración */
+.sound {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  font: inherit;
+  font-size: 18px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--fg);
+  padding: 0 6px;
+  cursor: pointer;
+}
+.sound:active,
+.sound:focus-visible { outline: none; background: var(--fg); color: var(--bg); }
 
 #scene {
   display: block;
