@@ -61,4 +61,9 @@ Se juega tocando el suelo para caminar y tocando los objetos para ver las accion
 `audio/ambient.js` genera la música en tiempo real con Web Audio (no hay archivos de audio):
 zumbido grave, viento, acordes en modo frigio, notas de caja de música, una campana lejana y
 el croar de la rana. Cada lugar tiene su ambiente (`MOODS`) y el cambio entre ellos es gradual.
-Lo usan las dos versiones; el botón ♪ silencia o activa la música.
+Lo usa la versión PS1; el botón ♪ silencia o activa la música.
+
+`audio/chiptune.js` es la música de la versión 1-bit: chiptune 8-bit al estilo NES/Game Boy
+con dos canales de pulso (melodía y arpegios), triángulo (bajo) y ruido (viento, latidos).
+Cada lugar tiene su pieza en `SONGS`; las melodías se escriben con 16 casillas por compás
+(número = nota en semitonos sobre re, `-` = mantener, `.` = silencio).

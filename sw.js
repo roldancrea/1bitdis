@@ -1,8 +1,8 @@
 // Service worker mínimo: permite jugar sin conexión una vez cargado.
-const CACHE = "niebla-v2";
+const CACHE = "niebla-v3";
 const FILES = [
   "./", "index.html", "style.css", "manifest.webmanifest", "icons/icon.svg",
-  "js/story.js", "js/render.js", "js/engine.js", "audio/ambient.js",
+  "js/story.js", "js/render.js", "js/engine.js", "audio/chiptune.js",
 ];
 
 self.addEventListener("install", e => {
